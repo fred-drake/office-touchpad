@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import Countdown, { zeroPad } from 'react-countdown';
 import axios from 'axios';
+import env from 'react-dotenv';
 import './styles.css';
 
 function App() {
@@ -12,9 +13,11 @@ function App() {
   const [ scanDocumentDisabled, setScanDocumentDisabled ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");
 
+  const { nodeRedUrlPrefix, scannerUrlPrefix } = window['runConfig'];
+
   const restartKiosk = async () => {
       await axios.get(
-          process.env.REACT_APP_NODERED_URL_PREFIX + '/kiosk-restart'
+          nodeRedUrlPrefix + '/kiosk-restart'
       );
   };
 
@@ -22,7 +25,7 @@ function App() {
       setTotalTimerTime(Date.now() + 1000 * 60 * 40); // 40 minutes
       timerApi.start();
       await axios.get(
-        process.env.REACT_APP_NODERED_URL_PREFIX + '/charge-device-1'
+        nodeRedUrlPrefix + '/charge-device-1'
       );
   };
 
@@ -30,31 +33,31 @@ function App() {
     setTotalTimerTime(Date.now() + 1000 * 60 * 60 * 2); // 2 hours
     timerApi.start();
     await axios.get(
-      process.env.REACT_APP_NODERED_URL_PREFIX + '/charge-device-2'
+      nodeRedUrlPrefix + '/charge-device-2'
     );
   };
 
   const tvOff = async () => {
     await axios.get(
-      process.env.REACT_APP_NODERED_URL_PREFIX + '/office-tv/off'
+      nodeRedUrlPrefix + '/office-tv/off'
     );
   };
 
   const tvKiosk = async () => {
     await axios.get(
-      process.env.REACT_APP_NODERED_URL_PREFIX + '/office-tv/kiosk'
+      nodeRedUrlPrefix + '/office-tv/kiosk'
     );
   };
 
   const tvSwitch = async () => {
     await axios.get(
-      process.env.REACT_APP_NODERED_URL_PREFIX + '/office-tv/switch'
+      nodeRedUrlPrefix + '/office-tv/switch'
     );
   };
 
   const officeLampToggle = async () => {
     await axios.get(
-      process.env.REACT_APP_NODERED_URL_PREFIX + '/office-lamp/toggle'
+      nodeRedUrlPrefix + '/office-lamp/toggle'
     );
   };
 
@@ -62,23 +65,23 @@ function App() {
     try {
       console.log("Executing scan...");
       await axios.get(
-        process.env.SCANNER_URL_PREFIX + '/scan'
+        scannerUrlPrefix + '/scan'
       );
   
       setScanDocumentDisabled(true);
       setTimeout(() => {
-        // Wait for scanner to start running before checking
+        // Wait for env.REACT_APP_SCANNER to start running before checking
         console.log("Waiting 7 seconds...")
       }, 7000);
   
       // Check status
       const intervalID = setInterval( async () => {
         console.log("Checking status...");
-        const response = await axios.get(process.env.REACT_APP_SCANNER_URL_PREFIX + '/status');
+        const response = await axios.get(scannerUrlPrefix + '/status');
         if (response.data && !response.data.running) {
           setScanDocumentDisabled(false);
           clearInterval(intervalID);
-          console.log("Scanner is ready again!");
+          console.log("env.REACT_APP_SCANNER is ready again!");
         }
       }, 1000);  
     } catch (err) {
