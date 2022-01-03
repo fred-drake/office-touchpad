@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import Countdown, { zeroPad } from 'react-countdown';
 import axios from 'axios';
@@ -64,11 +64,11 @@ function App() {
   const scanDocument = async () => {
     try {
       console.log("Executing scan...");
+      setScanDocumentDisabled(true);
       await axios.get(
         scannerUrlPrefix + '/scan'
       );
   
-      setScanDocumentDisabled(true);
       setTimeout(() => {
         // Wait for env.REACT_APP_SCANNER to start running before checking
         console.log("Waiting 7 seconds...")
@@ -103,6 +103,20 @@ function App() {
       return <span><span class="charging_label">Charging:</span> {zeroPad(hours)}:{zeroPad(minutes)}:{zeroPad(seconds)}</span>
     }
   }
+
+  useEffect(() => {
+    console.log("In effect...")
+    const interval = setInterval(async () => {
+      console.log("Checking scanner device status each minute...")
+      const response = await axios.get(scannerUrlPrefix + '/status');
+        if (response.data && !response.data.deviceAvailable) {
+          setErrorMessage("Scanner Device Not Connected");
+        } else {
+          setErrorMessage("");
+        }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="App">
